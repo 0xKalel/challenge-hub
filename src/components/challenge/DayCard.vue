@@ -47,12 +47,12 @@ const statusLabel = computed(() => {
 <template>
   <Card :class="{ 'opacity-60': isLocked }">
     <Collapsible :open="isExpanded && !isLocked" @update:open="$emit('toggleExpand', day.index)">
-      <CollapsibleTrigger as-child>
-        <CardHeader class="cursor-pointer select-none" :class="{ 'cursor-not-allowed': isLocked }">
+      <CollapsibleTrigger as-child :tabindex="isLocked ? -1 : undefined">
+        <CardHeader class="cursor-pointer select-none" :class="{ 'cursor-not-allowed': isLocked }" :aria-disabled="isLocked || undefined">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
               <div
-                class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold"
+                class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors duration-300"
                 :class="isCompleted ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-muted text-muted-foreground'"
               >
                 <Check v-if="isCompleted" class="h-4 w-4" />
@@ -83,7 +83,7 @@ const statusLabel = computed(() => {
           <template v-for="task in day.tasks" :key="task.id">
             <ExchangeTask
               v-if="task.type === 'exchange'"
-              :status="exchangeStatus ?? { state: 'idle' }"
+              :status="task.completed ? { state: 'success', exchangeId: 'restored' } : (exchangeStatus ?? { state: 'idle' })"
               @connect="$emit('connectExchange')"
             />
             <TaskItem

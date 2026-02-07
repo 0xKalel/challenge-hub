@@ -14,6 +14,6 @@ defineProps<{
       <span class="font-medium">Challenge Progress</span>
       <span class="text-muted-foreground">{{ completedDays }} / {{ totalDays }} days complete</span>
     </div>
-    <Progress :model-value="percentage" class="h-3" />
+    <Progress :model-value="percentage" class="h-3" :aria-label="`Challenge progress: ${completedDays} of ${totalDays} days complete`" />
   </div>
 </template>

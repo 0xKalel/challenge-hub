@@ -18,6 +18,7 @@ const {
   exchangeTaskId,
   handleToggleTask,
   handleCompleteTask,
+  resetProgress,
 } = useChallengeProgress()
 
 const {
@@ -85,7 +86,7 @@ onUnmounted(() => {
 <template>
   <DashboardLayout>
     <template #header>
-      <AppHeader />
+      <AppHeader @reset="resetProgress" />
     </template>
 
     <template #summary>
@@ -97,12 +98,15 @@ onUnmounted(() => {
     </template>
 
     <template #banner>
-      <NextActionBanner
-        v-if="progress.currentDayIndex !== null && !progress.isAllComplete"
-        :current-day-number="progress.currentDayIndex + 1"
-        :current-day-title="days[progress.currentDayIndex]?.title ?? ''"
-        @navigate="onNavigate"
-      />
+      <Transition name="fade-slide" mode="out-in">
+        <NextActionBanner
+          v-if="progress.currentDayIndex !== null && !progress.isAllComplete"
+          :key="progress.currentDayIndex"
+          :current-day-number="progress.currentDayIndex + 1"
+          :current-day-title="days[progress.currentDayIndex]?.title ?? ''"
+          @navigate="onNavigate"
+        />
+      </Transition>
     </template>
 
     <template #board>

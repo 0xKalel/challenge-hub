@@ -1,16 +1,24 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle } from 'lucide-vue-next'
+import { AlertTriangle, Loader2 } from 'lucide-vue-next'
 
 defineProps<{
   message: string
   attempt: number
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   retry: []
 }>()
+
+const pending = ref(false)
+
+function handleRetry(): void {
+  pending.value = true
+  emit('retry')
+}
 </script>
 
 <template>
@@ -18,7 +26,10 @@ defineEmits<{
     <AlertTriangle class="h-4 w-4" />
     <AlertTitle class="flex items-center justify-between">
       <span>Connection Failed</span>
-      <Button variant="outline" size="sm" @click="$emit('retry')">Retry</Button>
+      <Button variant="outline" size="sm" :disabled="pending" @click="handleRetry">
+        <Loader2 v-if="pending" class="h-4 w-4 animate-spin" />
+        <span>{{ pending ? 'Retrying...' : 'Retry' }}</span>
+      </Button>
     </AlertTitle>
     <AlertDescription class="text-xs">
       {{ message }} (attempt {{ attempt }}/3)

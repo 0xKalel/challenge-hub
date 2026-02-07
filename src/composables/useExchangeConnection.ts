@@ -30,9 +30,9 @@ export function useExchangeConnection(
     onEvent('exchange_connection_attempted', { timestamp: startTime })
 
     try {
-      await resilientPolicy.execute(() => connectExchange())
+      const result = await resilientPolicy.execute(() => connectExchange())
       const responseTime = Date.now() - startTime
-      status.value = { state: 'success' }
+      status.value = { state: 'success', exchangeId: result.exchangeId ?? 'unknown' }
       onEvent('exchange_connection_succeeded', { timestamp: Date.now(), responseTime })
       onSuccess()
     } catch (err) {

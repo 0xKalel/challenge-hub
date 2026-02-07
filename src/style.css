@@ -118,3 +118,75 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Vue <Transition> classes — fade */
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 200ms ease;
+  }
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
+
+  /* Vue <Transition> classes — fade + slide-up */
+  .fade-slide-enter-active,
+  .fade-slide-leave-active {
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+  .fade-slide-enter-from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .fade-slide-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  /* Vue <Transition> classes — scale-fade (celebration) */
+  .scale-fade-enter-active {
+    transition: opacity 400ms ease, transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .scale-fade-leave-active {
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+  .scale-fade-enter-from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  .scale-fade-leave-to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  /* Collapsible expand/collapse animation */
+  [data-state="open"] > [data-reka-collection-item] ~ *,
+  [data-state="open"][role="region"] {
+    animation: collapsible-expand 200ms ease-out;
+  }
+  [data-state="closed"][role="region"] {
+    animation: collapsible-collapse 200ms ease-out;
+  }
+
+  @keyframes collapsible-expand {
+    from {
+      height: 0;
+      opacity: 0;
+    }
+    to {
+      height: var(--reka-collapsible-content-height);
+      opacity: 1;
+    }
+  }
+  @keyframes collapsible-collapse {
+    from {
+      height: var(--reka-collapsible-content-height);
+      opacity: 1;
+    }
+    to {
+      height: 0;
+      opacity: 0;
+    }
+  }
+}

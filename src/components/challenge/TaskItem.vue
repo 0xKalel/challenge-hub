@@ -15,7 +15,7 @@ const emit = defineEmits<{
 
 <template>
   <div
-    class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-muted/50"
+    class="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-muted/50"
     :class="{ 'opacity-50 pointer-events-none': disabled }"
   >
     <Checkbox
@@ -24,12 +24,12 @@ const emit = defineEmits<{
       :disabled="disabled"
       @update:model-value="emit('toggle')"
     />
-    <span
-      class="text-sm select-none"
+    <label
+      :for="id"
+      class="cursor-pointer text-sm select-none"
       :class="{ 'line-through text-muted-foreground': completed }"
-      @click="emit('toggle')"
     >
       {{ label }}
-    </span>
+    </label>
   </div>
 </template>

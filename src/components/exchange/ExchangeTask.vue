@@ -16,26 +16,36 @@ defineEmits<{
 </script>
 
 <template>
-  <ExchangeIdle
-    v-if="status.state === 'idle'"
-    @connect="$emit('connect')"
-  />
-  <ExchangeConnecting
-    v-else-if="status.state === 'connecting'"
-    :attempt="status.attempt"
-  />
-  <ExchangeSuccess
-    v-else-if="status.state === 'success'"
-  />
-  <ExchangeError
-    v-else-if="status.state === 'error'"
-    :message="status.message"
-    :attempt="status.attempt"
-    @retry="$emit('connect')"
-  />
-  <ExchangeCircuitOpen
-    v-else-if="status.state === 'circuit-open'"
-    :reopens-at="status.reopensAt"
-    @retry="$emit('connect')"
-  />
+  <div role="status" aria-live="polite">
+    <Transition name="fade" mode="out-in">
+      <ExchangeIdle
+        v-if="status.state === 'idle'"
+        key="idle"
+        @connect="$emit('connect')"
+      />
+      <ExchangeConnecting
+        v-else-if="status.state === 'connecting'"
+        key="connecting"
+        :attempt="status.attempt"
+      />
+      <ExchangeSuccess
+        v-else-if="status.state === 'success'"
+        key="success"
+        :exchange-id="status.exchangeId"
+      />
+      <ExchangeError
+        v-else-if="status.state === 'error'"
+        key="error"
+        :message="status.message"
+        :attempt="status.attempt"
+        @retry="$emit('connect')"
+      />
+      <ExchangeCircuitOpen
+        v-else-if="status.state === 'circuit-open'"
+        key="circuit-open"
+        :reopens-at="status.reopensAt"
+        @retry="$emit('connect')"
+      />
+    </Transition>
+  </div>
 </template>
