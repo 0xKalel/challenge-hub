@@ -21,7 +21,7 @@ function hasExchangeTask(day: Day): boolean {
 </script>
 
 <template>
-  <div class="space-y-3">
+  <TransitionGroup tag="div" name="day-list" class="space-y-3">
     <DayCard
       v-for="day in days"
       :key="day.index"
@@ -32,5 +32,5 @@ function hasExchangeTask(day: Day): boolean {
       @toggle-task="$emit('toggleTask', $event)"
       @connect-exchange="$emit('connectExchange')"
     />
-  </div>
+  </TransitionGroup>
 </template>

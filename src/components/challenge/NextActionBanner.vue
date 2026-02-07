@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-vue-next'
 defineProps<{
   currentDayNumber: number
   currentDayTitle: string
+  isCurrentDayExpanded: boolean
 }>()
 
 defineEmits<{
@@ -17,8 +18,8 @@ defineEmits<{
   <Alert class="border-primary/20 bg-primary/5">
     <AlertTitle class="flex items-center justify-between">
       <span>Next Up: Day {{ currentDayNumber }}</span>
-      <Button variant="outline" size="sm" @click="$emit('navigate', currentDayNumber - 1)">
-        Continue
+      <Button variant="outline" size="sm" :disabled="isCurrentDayExpanded" @click="$emit('navigate', currentDayNumber - 1)">
+        Go to Day {{ currentDayNumber }}
         <ArrowRight class="ml-1 h-4 w-4" />
       </Button>
     </AlertTitle>

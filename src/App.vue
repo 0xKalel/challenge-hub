@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useChallengeProgress } from '@/composables/useChallengeProgress'
 import { useExchangeConnection } from '@/composables/useExchangeConnection'
 import { useEventTracking } from '@/composables/useEventTracking'
@@ -34,7 +34,20 @@ const {
   (name, payload) => track(name as Parameters<typeof track>[0], payload),
 )
 
-const expandedDayIndex = ref<number | null>(0)
+const expandedDayIndex = ref<number | null>(progress.value.currentDayIndex ?? 0)
+
+// Days the user has explicitly navigated to via the CTA
+const activatedDays = ref(new Set(
+  days.value.filter((d) => d.status === 'in-progress').map((d) => d.index),
+))
+
+const visibleDays = computed(() =>
+  days.value.filter((d) =>
+    d.status === 'completed' ||
+    d.status === 'in-progress' ||
+    activatedDays.value.has(d.index),
+  ),
+)
 
 function onToggleExpand(dayIndex: number): void {
   expandedDayIndex.value = expandedDayIndex.value === dayIndex ? null : dayIndex
@@ -56,6 +69,7 @@ function onToggleTask(taskId: string): void {
 }
 
 function onNavigate(dayIndex: number): void {
+  activatedDays.value = new Set([...activatedDays.value, dayIndex])
   expandedDayIndex.value = dayIndex
   track('day_opened', { dayId: dayIndex })
 }
@@ -64,13 +78,6 @@ watch(
   () => progress.value.isAllComplete,
   (complete) => {
     if (complete) track('challenge_completed')
-  },
-)
-
-watch(
-  () => progress.value.currentDayIndex,
-  (newIdx) => {
-    if (newIdx !== null) expandedDayIndex.value = newIdx
   },
 )
 
@@ -104,6 +111,7 @@ onUnmounted(() => {
           :key="progress.currentDayIndex"
           :current-day-number="progress.currentDayIndex + 1"
           :current-day-title="days[progress.currentDayIndex]?.title ?? ''"
+          :is-current-day-expanded="expandedDayIndex === progress.currentDayIndex"
           @navigate="onNavigate"
         />
       </Transition>
@@ -111,7 +119,7 @@ onUnmounted(() => {
 
     <template #board>
       <ChallengeBoard
-        :days="days"
+        :days="visibleDays"
         :expanded-day-index="expandedDayIndex"
         :exchange-status="exchangeStatus"
         @toggle-expand="onToggleExpand"
