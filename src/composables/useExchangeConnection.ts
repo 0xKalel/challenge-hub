@@ -1,4 +1,4 @@
-import { ref, readonly } from 'vue'
+import { ref, readonly, type DeepReadonly, type Ref } from 'vue'
 import type { ExchangeStatus } from '@/types/exchange'
 import { connectExchange } from '@/services/api/exchangeApi'
 import { resilientPolicy, retryPolicy, breakerPolicy, MAX_RETRY_ATTEMPTS, HALF_OPEN_AFTER_MS } from '@/constants/resilienceConfig'
@@ -6,10 +6,16 @@ import { BrokenCircuitError } from 'cockatiel'
 
 type EventCallback = (name: string, payload?: Record<string, unknown>) => void
 
+interface UseExchangeConnectionReturn {
+  readonly status: DeepReadonly<Ref<ExchangeStatus>>
+  readonly attemptConnection: () => Promise<void>
+  readonly dispose: () => void
+}
+
 export function useExchangeConnection(
   onSuccess: () => void,
   onEvent: EventCallback,
-) {
+): UseExchangeConnectionReturn {
   const status = ref<ExchangeStatus>({ state: 'idle' })
   let disposed = false
 

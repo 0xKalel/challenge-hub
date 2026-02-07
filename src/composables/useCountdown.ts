@@ -1,6 +1,13 @@
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, type Ref } from 'vue'
 
-export function useCountdown() {
+interface UseCountdownReturn {
+  readonly remainingMs: Ref<number>
+  readonly isActive: Ref<boolean>
+  readonly start: (targetTimestamp: number) => void
+  readonly stop: () => void
+}
+
+export function useCountdown(): UseCountdownReturn {
   const remainingMs = ref(0)
   const isActive = ref(false)
   let intervalId: ReturnType<typeof setInterval> | null = null

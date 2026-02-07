@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, type Ref, type ComputedRef } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import type { ChallengeState, ChallengeProgress, Day } from '@/types/challenge'
 import { createInitialDays } from '@/constants/challengeData'
@@ -19,7 +19,17 @@ const state = ref<ChallengeState>(savedState ?? {
 
 watchDebounced(state, (newState) => saveState(newState), { deep: true, debounce: 300 })
 
-export function useChallengeProgress() {
+interface UseChallengeProgressReturn {
+  readonly state: Ref<ChallengeState>
+  readonly days: ComputedRef<Day[]>
+  readonly progress: ComputedRef<ChallengeProgress>
+  readonly exchangeTaskId: ComputedRef<string | undefined>
+  readonly handleToggleTask: (taskId: string) => void
+  readonly handleCompleteTask: (taskId: string) => void
+  readonly resetProgress: () => void
+}
+
+export function useChallengeProgress(): UseChallengeProgressReturn {
   const days = computed<Day[]>(() => state.value.days)
   const progress = computed<ChallengeProgress>(() => computeProgress(state.value))
   const exchangeTaskId = computed<string | undefined>(() => findExchangeTask(state.value)?.id)
