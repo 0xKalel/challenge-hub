@@ -34,7 +34,10 @@ const {
   (name, payload) => track(name as Parameters<typeof track>[0], payload),
 )
 
-const expandedDayIndex = ref<number | null>(progress.value.currentDayIndex ?? 0)
+const initialDay = days.value[progress.value.currentDayIndex ?? -1]
+const expandedDayIndex = ref<number | null>(
+  initialDay?.status === 'in-progress' ? initialDay.index : null,
+)
 
 // Days the user has explicitly navigated to via the CTA
 const activatedDays = ref(new Set(
