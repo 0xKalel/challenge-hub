@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run preview)",
+      "Bash(npx vue-tsc *)",
+      "Bash(npx shadcn-vue@latest add *)",
+      "Bash(npm install *)",
+      "Bash(npm install)"
+    ],
+    "deny": [
+      "Edit(src/components/ui/**)",
+      "Write(src/components/ui/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/guard-ui-components.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
