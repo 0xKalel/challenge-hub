@@ -1,7 +1,7 @@
 import { ref, readonly } from 'vue'
 import type { ExchangeStatus } from '@/types/exchange'
 import { connectExchange } from '@/services/api/exchangeApi'
-import { resilientPolicy, retryPolicy, breakerPolicy } from '@/constants/resilienceConfig'
+import { resilientPolicy, retryPolicy, breakerPolicy, MAX_RETRY_ATTEMPTS, HALF_OPEN_AFTER_MS } from '@/constants/resilienceConfig'
 import { BrokenCircuitError } from 'cockatiel'
 
 type EventCallback = (name: string, payload?: Record<string, unknown>) => void
@@ -37,10 +37,10 @@ export function useExchangeConnection(
       onSuccess()
     } catch (err) {
       if (err instanceof BrokenCircuitError) {
-        status.value = { state: 'circuit-open', reopensAt: Date.now() + 30_000 }
+        status.value = { state: 'circuit-open', reopensAt: Date.now() + HALF_OPEN_AFTER_MS }
       } else {
         const message = err instanceof Error ? err.message : 'Unknown error'
-        status.value = { state: 'error', message, attempt: 3 }
+        status.value = { state: 'error', message, attempt: MAX_RETRY_ATTEMPTS }
         onEvent('exchange_connection_failed', {
           timestamp: Date.now(),
           errorType: message,

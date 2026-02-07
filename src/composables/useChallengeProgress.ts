@@ -1,4 +1,5 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
+import { watchDebounced } from '@vueuse/core'
 import type { ChallengeState, ChallengeProgress, Day } from '@/types/challenge'
 import { createInitialDays } from '@/constants/challengeData'
 import {
@@ -9,18 +10,19 @@ import {
 } from '@/services/challenge/challengeEngine'
 import { saveState, loadState, clearState } from '@/services/persistence/localStorageService'
 
-export function useChallengeProgress() {
-  const savedState = loadState()
-  const state = ref<ChallengeState>(savedState ?? {
-    days: createInitialDays(),
-    startedAt: Date.now(),
-  })
+// Module-scoped state — singleton shared across all callers
+const savedState = loadState()
+const state = ref<ChallengeState>(savedState ?? {
+  days: createInitialDays(),
+  startedAt: Date.now(),
+})
 
+watchDebounced(state, (newState) => saveState(newState), { deep: true, debounce: 300 })
+
+export function useChallengeProgress() {
   const days = computed<Day[]>(() => state.value.days)
   const progress = computed<ChallengeProgress>(() => computeProgress(state.value))
   const exchangeTaskId = computed<string | undefined>(() => findExchangeTask(state.value)?.id)
-
-  watch(state, (newState) => saveState(newState), { deep: true })
 
   function handleToggleTask(taskId: string): void {
     state.value = engineToggleTask(state.value, taskId)

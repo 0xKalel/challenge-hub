@@ -7,14 +7,17 @@ import {
   ConsecutiveBreaker,
 } from 'cockatiel'
 
+export const MAX_RETRY_ATTEMPTS = 3
+export const HALF_OPEN_AFTER_MS = 30_000
+
 export const retryPolicy = retry(handleAll, {
-  maxAttempts: 3,
+  maxAttempts: MAX_RETRY_ATTEMPTS,
   backoff: new ExponentialBackoff(),
 })
 
 export const breakerPolicy = circuitBreaker(handleAll, {
-  halfOpenAfter: 30_000,
-  breaker: new ConsecutiveBreaker(3),
+  halfOpenAfter: HALF_OPEN_AFTER_MS,
+  breaker: new ConsecutiveBreaker(MAX_RETRY_ATTEMPTS),
 })
 
 export const resilientPolicy = wrap(retryPolicy, breakerPolicy)
