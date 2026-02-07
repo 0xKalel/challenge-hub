@@ -3,9 +3,9 @@ import type { Day } from '@/types/challenge'
 import type { ExchangeStatus } from '@/types/exchange'
 import DayCard from './DayCard.vue'
 
-defineProps<{
+const props = defineProps<{
   days: Day[]
-  expandedDayIndex: number | null
+  expandedDays: Set<number>
   exchangeStatus: ExchangeStatus
 }>()
 
@@ -21,16 +21,16 @@ function hasExchangeTask(day: Day): boolean {
 </script>
 
 <template>
-  <TransitionGroup tag="div" name="day-list" class="space-y-3">
+  <div class="space-y-3">
     <DayCard
       v-for="day in days"
       :key="day.index"
       :day="day"
-      :is-expanded="expandedDayIndex === day.index"
+      :is-expanded="props.expandedDays.has(day.index)"
       :exchange-status="hasExchangeTask(day) ? exchangeStatus : undefined"
       @toggle-expand="$emit('toggleExpand', $event)"
       @toggle-task="$emit('toggleTask', $event)"
       @connect-exchange="$emit('connectExchange')"
     />
-  </TransitionGroup>
+  </div>
 </template>

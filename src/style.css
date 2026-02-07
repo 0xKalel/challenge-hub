@@ -188,24 +188,4 @@
       height: 0;
       opacity: 0;
     }
-  }
-
-  /* TransitionGroup — day cards enter/leave */
-  .day-list-enter-active {
-    transition: opacity 300ms ease, transform 300ms ease;
-  }
-  .day-list-leave-active {
-    transition: opacity 200ms ease, transform 200ms ease;
-  }
-  .day-list-enter-from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  .day-list-leave-to {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  .day-list-move {
-    transition: transform 300ms ease;
-  }
-}
+  }}

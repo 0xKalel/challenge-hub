@@ -91,7 +91,7 @@ const statusLabel = computed(() => {
               :id="task.id"
               :label="task.label"
               :completed="task.completed"
-              :disabled="isLocked"
+              :disabled="isLocked || isCompleted"
               @toggle="$emit('toggleTask', task.id)"
             />
           </template>

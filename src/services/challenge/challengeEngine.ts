@@ -11,7 +11,9 @@ export function computeDayStatus(day: Day, previousDayComplete: boolean): DaySta
   if (!previousDayComplete) return 'locked'
   if (isDayComplete(day)) return 'completed'
   if (day.tasks.some((t) => t.completed)) return 'in-progress'
-  return 'unlocked'
+  // Stay locked until manually unlocked via CTA
+  if (day.status === 'unlocked' || day.status === 'in-progress') return 'in-progress'
+  return 'locked'
 }
 
 export function recomputeAllStatuses(days: Day[]): Day[] {
@@ -45,17 +47,27 @@ export function completeTask(state: ChallengeState, taskId: string): ChallengeSt
 export function computeProgress(state: ChallengeState): ChallengeProgress {
   const completedDays = state.days.filter((d) => d.status === 'completed').length
   const totalDays = state.days.length
-  const currentDayIndex = state.days.findIndex(
-    (d) => d.status === 'unlocked' || d.status === 'in-progress',
-  )
+  const nextDayIndex = state.days.findIndex((d) => d.status === 'locked')
+  const isNextDayReady = nextDayIndex !== -1 && (() => {
+    const prev = state.days[nextDayIndex - 1]
+    return prev !== undefined && isDayComplete(prev)
+  })()
 
   return {
     completedDays,
     totalDays,
     percentage: Math.round((completedDays / totalDays) * 100),
-    currentDayIndex: currentDayIndex === -1 ? null : currentDayIndex,
+    nextDayIndex: nextDayIndex === -1 ? null : nextDayIndex,
+    isNextDayReady,
     isAllComplete: completedDays === totalDays,
   }
+}
+
+export function unlockDay(state: ChallengeState, dayIndex: number): ChallengeState {
+  const newDays = state.days.map((day) =>
+    day.index === dayIndex ? { ...day, status: 'in-progress' as DayStatus } : { ...day },
+  )
+  return { ...state, days: recomputeAllStatuses(newDays) }
 }
 
 export function findExchangeTask(state: ChallengeState): Task | undefined {

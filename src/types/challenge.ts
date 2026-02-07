@@ -26,6 +26,7 @@ export interface ChallengeProgress {
   readonly completedDays: number
   readonly totalDays: number
   readonly percentage: number
-  readonly currentDayIndex: number | null
+  readonly nextDayIndex: number | null
+  readonly isNextDayReady: boolean
   readonly isAllComplete: boolean
 }

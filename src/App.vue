@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useChallengeProgress } from '@/composables/useChallengeProgress'
 import { useExchangeConnection } from '@/composables/useExchangeConnection'
 import { useEventTracking } from '@/composables/useEventTracking'
@@ -18,6 +18,7 @@ const {
   exchangeTaskId,
   handleToggleTask,
   handleCompleteTask,
+  handleUnlockDay,
   resetProgress,
 } = useChallengeProgress()
 
@@ -34,27 +35,19 @@ const {
   (name, payload) => track(name as Parameters<typeof track>[0], payload),
 )
 
-const initialDay = days.value[progress.value.currentDayIndex ?? -1]
-const expandedDayIndex = ref<number | null>(
-  initialDay?.status === 'in-progress' ? initialDay.index : null,
-)
-
-// Days the user has explicitly navigated to via the CTA
-const activatedDays = ref(new Set(
+const expandedDays = ref(new Set(
   days.value.filter((d) => d.status === 'in-progress').map((d) => d.index),
 ))
 
-const visibleDays = computed(() =>
-  days.value.filter((d) =>
-    d.status === 'completed' ||
-    d.status === 'in-progress' ||
-    activatedDays.value.has(d.index),
-  ),
-)
-
 function onToggleExpand(dayIndex: number): void {
-  expandedDayIndex.value = expandedDayIndex.value === dayIndex ? null : dayIndex
-  track('day_opened', { dayId: dayIndex })
+  const next = new Set(expandedDays.value)
+  if (next.has(dayIndex)) {
+    next.delete(dayIndex)
+  } else {
+    next.add(dayIndex)
+    track('day_opened', { dayId: dayIndex })
+  }
+  expandedDays.value = next
 }
 
 function onToggleTask(taskId: string): void {
@@ -72,8 +65,10 @@ function onToggleTask(taskId: string): void {
 }
 
 function onNavigate(dayIndex: number): void {
-  activatedDays.value = new Set([...activatedDays.value, dayIndex])
-  expandedDayIndex.value = dayIndex
+  handleUnlockDay(dayIndex)
+  const next = new Set(expandedDays.value)
+  next.add(dayIndex)
+  expandedDays.value = next
   track('day_opened', { dayId: dayIndex })
 }
 
@@ -110,11 +105,11 @@ onUnmounted(() => {
     <template #banner>
       <Transition name="fade-slide" mode="out-in">
         <NextActionBanner
-          v-if="progress.currentDayIndex !== null && !progress.isAllComplete"
-          :key="progress.currentDayIndex"
-          :current-day-number="progress.currentDayIndex + 1"
-          :current-day-title="days[progress.currentDayIndex]?.title ?? ''"
-          :is-current-day-expanded="expandedDayIndex === progress.currentDayIndex"
+          v-if="progress.nextDayIndex !== null && !progress.isAllComplete"
+          :key="progress.nextDayIndex"
+          :next-day-number="progress.nextDayIndex + 1"
+          :next-day-title="days[progress.nextDayIndex]?.title ?? ''"
+          :is-ready="progress.isNextDayReady"
           @navigate="onNavigate"
         />
       </Transition>
@@ -122,8 +117,8 @@ onUnmounted(() => {
 
     <template #board>
       <ChallengeBoard
-        :days="visibleDays"
-        :expanded-day-index="expandedDayIndex"
+        :days="days"
+        :expanded-days="expandedDays"
         :exchange-status="exchangeStatus"
         @toggle-expand="onToggleExpand"
         @toggle-task="onToggleTask"

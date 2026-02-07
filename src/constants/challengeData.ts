@@ -52,5 +52,3 @@ export function createInitialDays(): Day[] {
     },
   ]
 }
-
-export const TOTAL_DAYS = 5
