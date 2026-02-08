@@ -1,14 +1,16 @@
 import { ref, readonly, type DeepReadonly, type Ref } from 'vue'
 import type { ExchangeStatus } from '@/types/exchange'
 import { connectExchange } from '@/services/api/exchangeApi'
-import { resilientPolicy, retryPolicy, breakerPolicy, MAX_RETRY_ATTEMPTS, HALF_OPEN_AFTER_MS } from '@/constants/resilienceConfig'
+import { createResilientPolicies, MAX_RETRY_ATTEMPTS, HALF_OPEN_AFTER_MS } from '@/constants/resilienceConfig'
 import { BrokenCircuitError } from 'cockatiel'
+import type { IDisposable } from 'cockatiel'
 
 type EventCallback = (name: string, payload?: Record<string, unknown>) => void
 
 interface UseExchangeConnectionReturn {
   readonly status: DeepReadonly<Ref<ExchangeStatus>>
   readonly attemptConnection: () => Promise<void>
+  readonly reset: () => void
   readonly dispose: () => void
 }
 
@@ -18,17 +20,24 @@ export function useExchangeConnection(
 ): UseExchangeConnectionReturn {
   const status = ref<ExchangeStatus>({ state: 'idle' })
   let disposed = false
+  let policies = createResilientPolicies()
+  let disposables: IDisposable[] = []
 
-  // Wire cockatiel events to tracking
-  const retryDisposable = retryPolicy.onRetry(({ attempt }) => {
-    if (!disposed) {
-      status.value = { state: 'connecting', attempt }
-    }
-  })
+  function attachListeners(): void {
+    const retryDisposable = policies.retryPolicy.onRetry(({ attempt }) => {
+      if (!disposed) {
+        status.value = { state: 'connecting', attempt }
+      }
+    })
 
-  const breakDisposable = breakerPolicy.onBreak(() => {
-    onEvent('exchange_connection_failed', { errorType: 'circuit_open', willRetry: false })
-  })
+    const breakDisposable = policies.breakerPolicy.onBreak(() => {
+      onEvent('exchange_connection_failed', { errorType: 'circuit_open', willRetry: false })
+    })
+
+    disposables = [retryDisposable, breakDisposable]
+  }
+
+  attachListeners()
 
   async function attemptConnection(): Promise<void> {
     const startTime = Date.now()
@@ -36,7 +45,7 @@ export function useExchangeConnection(
     onEvent('exchange_connection_attempted', { timestamp: startTime })
 
     try {
-      const result = await resilientPolicy.execute(() => connectExchange())
+      const result = await policies.resilientPolicy.execute(() => connectExchange())
       const responseTime = Date.now() - startTime
       status.value = { state: 'success', exchangeId: result.exchangeId ?? 'unknown' }
       onEvent('exchange_connection_succeeded', { timestamp: Date.now(), responseTime })
@@ -56,11 +65,17 @@ export function useExchangeConnection(
     }
   }
 
-  function dispose(): void {
-    disposed = true
-    retryDisposable.dispose()
-    breakDisposable.dispose()
+  function reset(): void {
+    disposables.forEach((d) => d.dispose())
+    policies = createResilientPolicies()
+    attachListeners()
+    status.value = { state: 'idle' }
   }
 
-  return { status: readonly(status), attemptConnection, dispose }
+  function dispose(): void {
+    disposed = true
+    disposables.forEach((d) => d.dispose())
+  }
+
+  return { status: readonly(status), attemptConnection, reset, dispose }
 }

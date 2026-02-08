@@ -25,6 +25,7 @@ const {
 const {
   status: exchangeStatus,
   attemptConnection,
+  reset: resetExchange,
   dispose: disposeExchange,
 } = useExchangeConnection(
   () => {
@@ -64,6 +65,11 @@ function onToggleTask(taskId: string): void {
   })
 }
 
+function handleReset(): void {
+  resetProgress()
+  resetExchange()
+}
+
 function onNavigate(dayIndex: number): void {
   handleUnlockDay(dayIndex)
   const next = new Set(expandedDays.value)
@@ -91,7 +97,7 @@ onUnmounted(() => {
 <template>
   <DashboardLayout>
     <template #header>
-      <AppHeader @reset="resetProgress" />
+      <AppHeader @reset="handleReset" />
     </template>
 
     <template #summary>
